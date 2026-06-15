@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpawnHub — Beginner Guides for Every Game</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #0a0b0f;
+    --surface: #12141c;
+    --card:    #181b26;
+    --border:  #252836;
+    --neon-a:  #7c3aed;
+    --neon-b:  #06b6d4;
+    --neon-c:  #f59e0b;
+    --text:    #e2e8f0;
+    --muted:   #64748b;
+    --grad:    linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%);
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding-bottom: 80px;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; height: 60px;
+    background: rgba(10,11,15,0.9);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none;
+  }
+  .nav-logo svg { height: 36px; width: auto; }
+  .nav-right { display: flex; gap: 10px; }
+
+  .btn {
+    padding: 8px 18px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; border: none; transition: all .2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-ghost {
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--neon-a); }
+  .btn-primary { background: var(--grad); color: #fff; border: none; }
+  .btn-primary:hover { opacity: .85; transform: translateY(-1px); }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 64px;
+    background: rgba(18,20,28,0.97);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    display: flex; z-index: 100;
+  }
+  .bnav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 4px; cursor: pointer;
+    color: var(--muted); font-size: 11px; font-weight: 500;
+    transition: color .2s; border: none; background: none;
+    font-family: 'Inter', sans-serif;
+  }
+  .bnav-item .icon { font-size: 20px; }
+  .bnav-item.active { color: #a78bfa; }
+  .bnav-item:hover { color: var(--text); }
+
+  /* HERO */
+  .hero {
+    padding: 48px 24px 36px;
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% -10%, rgba(124,58,237,.22) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(32px, 6vw, 60px);
+    font-weight: 700; line-height: 1.05; margin-bottom: 14px;
+  }
+  .hero h1 em {
+    font-style: normal;
+    background: var(--grad);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero-sub { color: var(--muted); font-size: 15px; max-width: 460px; margin: 0 auto 28px; line-height: 1.6; }
+
+  /* SEARCH */
+  .search-wrap { max-width: 560px; margin: 0 auto 16px; position: relative; }
+  .search-wrap input {
+    width: 100%; padding: 14px 20px 14px 48px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; color: var(--text); font-size: 15px;
+    font-family: 'Inter', sans-serif; outline: none; transition: border-color .2s;
+  }
+  .search-wrap input:focus { border-color: var(--neon-a); }
+  .search-wrap input::placeholder { color: var(--muted); }
+  .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 18px; pointer-events: none; }
+
+  /* SEARCH RESULTS */
+  .search-results {
+    max-width: 560px; margin: 0 auto 24px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; display: none;
+  }
+  .search-results.show { display: block; }
+  .search-result-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; cursor: pointer; transition: background .15s;
+    border-bottom: 1px solid var(--border);
+  }
+  .search-result-item:last-child { border-bottom: none; }
+  .search-result-item:hover { background: rgba(124,58,237,.08); }
+  .search-result-item img { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; }
+  .search-result-name { font-weight: 600; font-size: 14px; }
+  .search-result-meta { font-size: 12px; color: var(--muted); }
+
+  /* SECTION */
+  .section { padding: 0 20px 48px; max-width: 1200px; margin: 0 auto; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .section-title {
+    font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-title::before { content: ''; display: block; width: 4px; height: 18px; background: var(--grad); border-radius: 2px; }
+
+  /* GENRE PILLS */
+  .genre-pills { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 20px; margin: 0 auto 32px; max-width: 1200px; }
+  .pill {
+    padding: 6px 14px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface);
+    font-size: 13px; color: var(--muted); cursor: pointer; transition: all .2s;
+  }
+  .pill:hover, .pill.active { border-color: var(--neon-a); color: #a78bfa; background: rgba(124,58,237,.1); }
+
+  /* GAMES GRID */
+  .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+  .game-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; cursor: pointer; transition: all .22s; position: relative;
+  }
+  .game-card:hover { transform: translateY(-4px); border-color: var(--neon-a); box-shadow: 0 0 24px rgba(124,58,237,.2); }
+  .game-thumb {
+    width: 100%; aspect-ratio: 3/4;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .game-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .game-thumb-fallback { font-size: 44px; }
+  .game-thumb::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+    height: 55%; background: linear-gradient(to top, var(--card) 0%, transparent 100%);
+  }
+  .game-badge {
+    position: absolute; top: 8px; right: 8px;
+    padding: 3px 7px; border-radius: 6px;
+    font-size: 10px; font-weight: 600; font-family: 'JetBrains Mono', monospace; z-index: 2;
+  }
+  .badge-hot { background: rgba(239,68,68,.2); color: #f87171; border: 1px solid rgba(239,68,68,.3); }
+  .badge-new { background: rgba(6,182,212,.2); color: #67e8f9; border: 1px solid rgba(6,182,212,.3); }
+  .badge-top { background: rgba(245,158,11,.2); color: #fcd34d; border: 1px solid rgba(245,158,11,.3); }
+  .game-info { padding: 10px 12px 12px; }
+  .game-name { font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .game-meta { font-size: 11px; color: var(--muted); display: flex; gap: 8px; }
+
+  /* LEADERBOARD PAGE */
+  .lb-hero {
+    padding: 40px 24px 32px; text-align: center; position: relative; overflow: hidden;
+  }
+  .lb-hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(245,158,11,.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .lb-hero h1 { font-family: 'Rajdhani', sans-serif; font-size: 40px; font-weight: 700; margin-bottom: 8px; }
+  .lb-hero h1 span { background: linear-gradient(135deg,#f59e0b,#ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .lb-hero p { color: var(--muted); font-size: 14px; }
+
+  .lb-list { max-width: 700px; margin: 0 auto; padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+
+  .lb-card {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; transition: all .2s; cursor: pointer;
+  }
+  .lb-card:hover { border-color: var(--neon-b); background: rgba(6,182,212,.04); }
+  .lb-card.gold { border-color: rgba(245,158,11,.4); background: rgba(245,158,11,.05); }
+  .lb-card.silver { border-color: rgba(148,163,184,.3); }
+  .lb-card.bronze { border-color: rgba(180,100,50,.3); }
+
+  .lb-rank {
+    font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700;
+    width: 36px; text-align: center; flex-shrink: 0;
+  }
+  .rank-1 { background: linear-gradient(135deg,#f59e0b,#fcd34d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .rank-2 { color: #94a3b8; }
+  .rank-3 { color: #b46432; }
+  .rank-other { color: var(--muted); font-size: 16px; }
+
+  .lb-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--grad); display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700; font-family: 'Rajdhani', sans-serif;
+    flex-shrink: 0; color: white;
+  }
+  .lb-info { flex: 1; min-width: 0; }
+  .lb-name { font-weight: 600; font-size: 15px; margin-bottom: 3px; }
+  .lb-stats { font-size: 12px; color: var(--muted); display: flex; gap: 12px; }
+  .lb-score {
+    font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600;
+    color: var(--neon-c); flex-shrink: 0;
+  }
+
+  .load-more-wrap { text-align: center; padding: 28px 0 8px; }
+  .btn-load {
+    padding: 12px 32px; border-radius: 10px; font-size: 14px; font-weight: 600;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); cursor: pointer; transition: all .2s; font-family: 'Inter', sans-serif;
+  }
+  .btn-load:hover { border-color: var(--neon-a); color: #a78bfa; }
+
+  /* GUIDE PAGE */
+  .guide-page-inner { max-width: 760px; margin: 0 auto; padding: 32px 20px; }
+  .back-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 8px 14px;
+    cursor: pointer; font-size: 13px; font-family: 'Inter', sans-serif; margin-bottom: 28px;
+    display: inline-block;
+  }
+  .back-btn:hover { border-color: var(--neon-a); }
+  .guide-article h1 { font-family: 'Rajdhani', sans-serif; font-size: 34px; font-weight: 700; margin-bottom: 12px; }
+  .guide-article .meta { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-bottom: 28px; flex-wrap: wrap; }
+  .guide-toc { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px; margin-bottom: 28px; }
+  .guide-toc h3 { font-family: 'Rajdhani', sans-serif; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .guide-toc ol { padding-left: 18px; }
+  .guide-toc li { font-size: 13px; margin-bottom: 5px; color: var(--neon-b); cursor: pointer; }
+  .guide-article h2 { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; margin: 28px 0 12px; padding-left: 12px; border-left: 3px solid var(--neon-a); }
+  .guide-article p { color: #94a3b8; line-height: 1.8; font-size: 15px; margin-bottom: 14px; }
+  .tip-box { background: rgba(6,182,212,.07); border: 1px solid rgba(6,182,212,.2); border-radius: 10px; padding: 14px 18px; margin: 18px 0; }
+  .tip-box strong { color: var(--neon-b); display: block; margin-bottom: 5px; font-size: 12px; }
+  .tip-box p { color: var(--text); margin: 0; font-size: 14px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 480px) {
+    .games-grid { grid-template-columns: repeat(2, 1fr); }
+    nav .nav-right .btn-ghost { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="#" onclick="showPage('home')">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 100">
+      <defs>
+        <linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#7c3aed"/><stop offset="100%" style="stop-color:#06b6d4"/></linearGradient>
+        <linearGradient id="tg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#7c3aed"/><stop offset="100%" style="stop-color:#06b6d4"/></linearGradient>
+        <radialGradient id="gi" cx="50%" cy="50%" r="50%"><stop offset="0%" style="stop-color:#ffffff"/><stop offset="40%" style="stop-color:#a78bfa"/><stop offset="100%" style="stop-color:#7c3aed;stop-opacity:0"/></radialGradient>
+        <filter id="gl"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="sg"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <ellipse cx="46" cy="91" rx="8" ry="3" fill="#7c3aed" opacity="0.25"/>
+      <path d="M46 10 C32 10 22 20 22 33 C22 50 46 78 46 78 C46 78 70 50 70 33 C70 20 60 10 46 10 Z" fill="url(#pg)" filter="url(#gl)"/>
+      <circle cx="46" cy="33" r="12" fill="#0a0b0f" opacity="0.6"/>
+      <circle cx="46" cy="33" r="9" fill="url(#gi)" filter="url(#sg)"/>
+      <g filter="url(#gl)" opacity="0.9">
+        <line x1="46" y1="22" x2="46" y2="19" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="46" y1="44" x2="46" y2="47" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="35" y1="33" x2="32" y2="33" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="57" y1="33" x2="60" y2="33" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="38" y1="25" x2="36" y2="23" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+        <line x1="54" y1="41" x2="56" y2="43" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+        <line x1="54" y1="25" x2="56" y2="23" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+        <line x1="38" y1="41" x2="36" y2="43" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+      </g>
+      <text x="88" y="48" font-family="'Rajdhani','Arial Black',sans-serif" font-weight="700" font-size="38" fill="url(#tg)" letter-spacing="1">Spawn</text>
+      <text x="88" y="72" font-family="'Rajdhani','Arial Black',sans-serif" font-weight="700" font-size="20" fill="#64748b" letter-spacing="6">HUB</text>
+    </svg>
+  </a>
+  <div class="nav-right">
+    <button class="btn btn-ghost">Log in</button>
+    <button class="btn btn-primary">Write a Guide</button>
+  </div>
+</nav>
+
+<!-- ═══════════════ HOME PAGE ═══════════════ -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <h1>Every game has a<br><em>first step.</em></h1>
+    <p class="hero-sub">Beginner guides written by real players. No fluff — just what you need to start.</p>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search a game…" oninput="handleSearch(this.value)" autocomplete="off">
+    </div>
+    <div class="search-results" id="searchResults"></div>
+  </div>
+
+  <div class="genre-pills">
+    <div class="pill active" onclick="setPill(this)">All</div>
+    <div class="pill" onclick="setPill(this)">RPG</div>
+    <div class="pill" onclick="setPill(this)">Shooter</div>
+    <div class="pill" onclick="setPill(this)">Strategy</div>
+    <div class="pill" onclick="setPill(this)">Survival</div>
+    <div class="pill" onclick="setPill(this)">Fighting</div>
+    <div class="pill" onclick="setPill(this)">Indie</div>
+    <div class="pill" onclick="setPill(this)">MOBA</div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Popular Games</div>
+    </div>
+    <div class="games-grid">
+
+      <div class="game-card" onclick="showGuide('Elden Ring')">
+        <div class="game-thumb" style="background:linear-gradient(135deg,#1a0f2e,#3d1a5c)">
+          <img src="https://cdn2.steamgriddb.com/thumb/b15b6e5a46ca2fc43c6a4f2c10e07c5e.jpg" alt="Elden Ring" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="game-thumb-fallback" style="display:none">🏰</div>
+          <div class="game-badge badge-hot">🔥 HOT</div>
+        </div>
+        <div class="game-info">
+          <div class="game-name">Elden Ring</div>
+          <div class="game-meta"><span>📖 84</span><span>⭐ 4.9</span></div>
+        </div>
+      </div>
+
+      <div class="game-card" onclick="showGuide('Minecraft')">
+        <div class="game-thumb" style="background:linear-gradient(135deg,#0f2e0f,#1a5c2e)">
+          <img src="https://cdn2.steamgriddb.com/thumb/fd2bdeea12b55f157eb76b5e3f6468d6.jpg" alt="Minecraft" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="game-thumb-fallback" style="display:none">⛏</div>
+          <div class="game-badge badge-top">👑 TOP</div>
+        </div>
+        <div class="game-info">
+          <div class="game-name">Minecraft</div>
+          <div class="game-meta"><span>📖 203</span><span>⭐ 4.7</span></div>
+        </div>
+      </div>
+
+      <div class="game-card" onclick="showGuide('Fortnite')">
+        <div class="game-thumb" style="background:linear-gradient(135deg,#0f1a3d,#1a2e6e)">
+          <img src="https://cdn2.steamgriddb.com/thumb/a5e3ccb90128fcaf054dc71b9de8fbf7.jpg" alt="Fortnite" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="game-thumb-fallback" style="display:none">🎯</div>
+          <div class="game-badge badge-hot">🔥 HOT</div>
+        </div>
+        <div class="game-info">
+          <div class="game-name">Fortnite</div>
+          <div class="game-meta"><span>📖 156</span><span>⭐ 4.5</span></div>
+        </div>
+      </div>
+
+      <div class="game-card" onclick="showGuide('League of Legends')">
+        <div class="game-thumb" style="background:linear-gradient(135deg,#0a1520,#0d2d4a)">
+          <img src="https://cdn2.steamgriddb.com/thumb/1ef8b1ccf3e4b9fd9b2aedb1d9d7f73b.jpg" alt="League of Legends" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="game-thumb-fallback" style="display:none">⚔️</div>
+          <div class="game-badge badge-top">👑 TOP</div>
+        </div>
+        <div class="game-info">
+          <div class="game-name">League of Legends</div>
+          <div class="game-meta"><span>📖 312</span><span>⭐ 4.6</span></div>
+        </div>
+      </div>
+
+      <div class="game-card" onclick="showGuide('Baldur\'s Gate 3')">
+        <div class="game-thumb" style="background:linear-gradient(135deg,#0f1a2e,#1a3d5c)">
+          <img src="https://cdn2.steamgriddb.com/thumb/13b99fa43dcec5c1ef9eee29f26faefc.jpg" alt="BG3" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="game-thumb-fallback" style="display:none">🎲</div>
+          <div class="game-badge badge-new">✦ NEW</div>
+        </div>
+        <div class="game-info">
+          <div class="game-name">Baldur's Gate 3</div>
+          <div class="game-meta"><span>📖 112</span><span>⭐ 4.8</span></div>
+        </div>
+      </div>
+
+      <div class="game-card" onclick="showGuide('GTA V')">
+        <div class="game-thumb" style="background:linear-gradient(135deg,#1a1a0a,#3d3d10)">
+          <img src="https://cdn2.steamgriddb.com/thumb/30a7c5f5e50f77bf7fd06bc1aadfecc9.jpg" alt="GTA V" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="game-thumb-fallback" style="display:none">🚗</div>
+          <div class="game-badge badge-top">👑 TOP</div>
+        </div>
+        <div class="game-info">
+          <div class="game-name">GTA V</div>
+          <div class="game-meta"><span>📖 178</span><span>⭐ 4.6</span></div>
+        </div>
+      </div>
+
+      <div class="game-card" onclick="showGuide('Cyberpunk 2077')">
+        <div class="game-thumb" style="background:linear-gradient(135deg,#0a1a2e,#0d2e4a)">
+          <img src="https://cdn2.steamgriddb.com/thumb/e5c3d5d3de86b90f4a5c8b2c7f05b1a2.jpg" alt="Cyberpunk 2077" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="game-thumb-fallback" style="display:none">🤖</div>
+          <div class="game-badge badge-new">✦ NEW</div>
+        </div>
+        <div class="game-info">
+          <div class="game-name">Cyberpunk 2077</div>
+          <div class="game-meta"><span>📖 94</span><span>⭐ 4.7</span></div>
+        </div>
+      </div>
+
+      <div class="game-card" onclick="showGuide('Dota 2')">
+        <div class="game-thumb" style="background:linear-gradient(135deg,#1a0a0a,#3d1010)">
+          <img src="https://cdn2.steamgriddb.com/thumb/8f7c5a3bc3f7d5f5f5f7a3bc3f7d5f5f.jpg" alt="Dota 2" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="game-thumb-fallback" style="display:none">🛡️</div>
+          <div class="game-badge badge-hot">🔥 HOT</div>
+        </div>
+        <div class="game-info">
+          <div class="game-name">Dota 2</div>
+          <div class="game-meta"><span>📖 267</span><span>⭐ 4.5</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ LEADERBOARD PAGE ═══════════════ -->
+<div id="page-leaders" class="page">
+  <div class="lb-hero">
+    <h1>Top <span>100</span> Authors</h1>
+    <p>The best guide writers on SpawnHub, ranked by quality and community votes</p>
+  </div>
+
+  <div class="lb-list" id="lbList"></div>
+
+  <div class="load-more-wrap" id="loadMoreWrap">
+    <button class="btn-load" onclick="loadMore()">Load more authors (showing <span id="showing">10</span> of 100)</button>
+  </div>
+</div>
+
+<!-- ═══════════════ GUIDE PAGE ═══════════════ -->
+<div id="page-guide" class="page">
+  <div class="guide-page-inner">
+    <button class="back-btn" onclick="showPage('home')">← Back to games</button>
+    <div class="guide-article">
+      <h1 id="guideTitle"></h1>
+      <div class="meta">
+        <span>👤 by <span id="guideAuthor"></span></span>
+        <span>📅 June 2026</span>
+        <span>⏱ 8 min read</span>
+        <span>👁 <span id="guideViews"></span> views</span>
+      </div>
+      <div class="guide-toc">
+        <h3>Table of Contents</h3>
+        <ol>
+          <li>What this guide covers</li>
+          <li>The first thing you must do</li>
+          <li>Common beginner mistakes</li>
+          <li>Your first challenge</li>
+          <li>Quick tips</li>
+        </ol>
+      </div>
+      <h2>1. What this guide covers</h2>
+      <p id="guideP1"></p>
+      <div class="tip-box">
+        <strong>💡 Beginner Tip</strong>
+        <p id="guideTip"></p>
+      </div>
+      <h2>2. The first thing you must do</h2>
+      <p id="guideP2"></p>
+      <h2>3. Common beginner mistakes</h2>
+      <p id="guideP3"></p>
+      <h2>4. Your first challenge</h2>
+      <p id="guideP4"></p>
+      <h2>5. Quick tips before you go</h2>
+      <p id="guideP5"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ BOTTOM NAV ═══════════════ -->
+<div class="bottom-nav">
+  <button class="bnav-item active" id="bnav-home" onclick="showPage('home')">
+    <span class="icon">🏠</span>Home
+  </button>
+  <button class="bnav-item" id="bnav-leaders" onclick="showPage('leaders')">
+    <span class="icon">🏆</span>Top Authors
+  </button>
+  <button class="bnav-item" id="bnav-write" onclick="showPage('home')">
+    <span class="icon">✍️</span>Write
+  </button>
+  <button class="bnav-item" id="bnav-profile" onclick="showPage('home')">
+    <span class="icon">👤</span>Profile
+  </button>
+</div>
+
+<script>
+// ── PAGES ──
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const bnav = document.getElementById('bnav-' + name);
+  if (bnav) bnav.classList.add('active');
+  window.scrollTo(0, 0);
+  if (name === 'leaders') buildLeaderboard();
+}
+
+// ── PILLS ──
+function setPill(el) {
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── SEARCH ──
+const allGames = [
+  'Elden Ring','Minecraft','Fortnite','League of Legends',
+  "Baldur's Gate 3",'GTA V','Cyberpunk 2077','Dota 2',
+  'Valorant','CS2','Apex Legends','Hollow Knight',
+  'Hades II','Palworld','Helldivers 2','The Witcher 3'
+];
+
+function handleSearch(val) {
+  const box = document.getElementById('searchResults');
+  if (!val.trim()) { box.classList.remove('show'); return; }
+  const matches = allGames.filter(g => g.toLowerCase().includes(val.toLowerCase())).slice(0, 5);
+  if (!matches.length) { box.classList.remove('show'); return; }
+  box.innerHTML = matches.map(g => `
+    <div class="search-result-item" onclick="showGuide('${g.replace(/'/g,"\\'")}')">
+      <div style="width:36px;height:36px;border-radius:8px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:16px">🎮</div>
+      <div>
+        <div class="search-result-name">${g}</div>
+        <div class="search-result-meta">Beginner guide available</div>
+      </div>
+    </div>`).join('');
+  box.classList.add('show');
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap') && !e.target.closest('.search-results'))
+    document.getElementById('searchResults').classList.remove('show');
+});
+
+// ── GUIDE ──
+const guideData = {
+  'Elden Ring': { author:'Thornwall', views:'18.4k', p1:'This guide is for players who have never touched a FromSoftware game and feel overwhelmed instantly. We cover only the first 3 hours — no story spoilers.', tip:"Don't fight everything you see. Elden Ring rewards exploration. If something feels too hard, walk around it.", p2:'Go to the glowing chest in front of you first — it gives you a map fragment. Then rest at the nearest Site of Grace to save your progress.', p3:'Most beginners spend runes on the wrong stats. Always level Vigor (health) first — dying from low HP is the #1 frustration.', p4:'Your first real boss is Margit. You will die. That\'s fine — be at least level 20 first and use the summoning sign near the fog gate.', p5:'Roll into enemies, not away. Collect every glowing item. Your horse Torrent unlocks after the second Site of Grace.' },
+  'Minecraft': { author:'BlockMaster_99', views:'32k', p1:'Minecraft can feel aimless at first. This guide walks you through the essential first day so you survive your first night and actually enjoy the game.', tip:'The first night is dangerous. Your only goal is to NOT die — everything else can wait until day two.', p2:'The moment you spawn, punch trees to get wood. Craft a crafting table, then wooden tools in this order: pickaxe → axe → sword.', p3:"Don't dig straight down — you'll fall into a cave or lava. Don't sleep only once — you need to sleep multiple nights to reset the spawn.", p4:'Your first challenge is surviving night 1. Dig a small hole in a hillside before sunset. Place a door. Wait inside.', p5:"Stone tools are 2x faster than wood — upgrade fast. Eat food when health drops. Don't mine iron without a stone pickaxe." },
+  default: { author:'SpawnHub Team', views:'5.2k', p1:"This beginner guide will walk you through everything you need to know to get started. We've removed all the fluff — just the essentials.", tip:"Take your time. Every expert was once a beginner. Don't rush the early game.", p2:'Start by learning the controls and basic mechanics. Spend your first 30 minutes just exploring without any pressure.', p3:'Beginners often skip the tutorial. Always complete it — even experienced players find tips they missed.', p4:'Your first real challenge will test everything you learned. Take it slow, observe patterns, and learn from each attempt.', p5:'Read item descriptions carefully. Save often. Ask the community — SpawnHub authors are here to help.' }
+};
+
+function showGuide(game) {
+  const d = guideData[game] || guideData.default;
+  document.getElementById('guideTitle').textContent = game + ' — Beginner\'s Guide';
+  document.getElementById('guideAuthor').textContent = d.author;
+  document.getElementById('guideViews').textContent = d.views;
+  document.getElementById('guideP1').textContent = d.p1;
+  document.getElementById('guideTip').textContent = d.tip;
+  document.getElementById('guideP2').textContent = d.p2;
+  document.getElementById('guideP3').textContent = d.p3;
+  document.getElementById('guideP4').textContent = d.p4;
+  document.getElementById('guideP5').textContent = d.p5;
+  document.getElementById('searchResults').classList.remove('show');
+  document.getElementById('searchInput').value = '';
+  showPage('guide');
+}
+
+// ── LEADERBOARD ──
+const authors = [
+  {name:'Thornwall',guides:84,views:'1.2M',score:9840,spec:'RPG / Soulslike'},
+  {name:'BlockMaster_99',guides:203,views:'980K',score:9210,spec:'Sandbox / Survival'},
+  {name:'Mireva',guides:67,views:'740K',score:8870,spec:'RPG / Story'},
+  {name:'Koda_V',guides:112,views:'690K',score:8540,spec:'Shooter / Co-op'},
+  {name:'NexusPlay',guides:55,views:'610K',score:8120,spec:'Strategy'},
+  {name:'PixelSage',guides:91,views:'580K',score:7980,spec:'Indie / Platformer'},
+  {name:'VoidRunner',guides:48,views:'520K',score:7760,spec:'Action / Adventure'},
+  {name:'Graystone',guides:76,views:'490K',score:7540,spec:'MOBA / Competitive'},
+  {name:'LunaGuide',guides:63,views:'460K',score:7320,spec:'RPG / Fantasy'},
+  {name:'CodexHero',guides:39,views:'410K',score:7100,spec:'FPS / Tactical'},
+  {name:'IronScroll',guides:88,views:'390K',score:6940,spec:'Survival / Horror'},
+  {name:'StarMapper',guides:52,views:'360K',score:6780,spec:'Open World'},
+  {name:'DawnBlade',guides:44,views:'340K',score:6620,spec:'Fighting'},
+  {name:'EchoWarden',guides:71,views:'320K',score:6460,spec:'MMORPG'},
+  {name:'SilverFang',guides:36,views:'300K',score:6300,spec:'Roguelike'},
+  {name:'NovaSpark',guides:59,views:'285K',score:6150,spec:'Shooter'},
+  {name:'RuneForge',guides:82,views:'270K',score:6000,spec:'RPG'},
+  {name:'TideWalker',guides:41,views:'255K',score:5850,spec:'Strategy'},
+  {name:'GlitchHunter',guides:67,views:'240K',score:5700,spec:'Puzzle'},
+  {name:'OmegaDrift',guides:33,views:'225K',score:5550,spec:'Racing'},
+  {name:'CipherX',guides:54,views:'210K',score:5400,spec:'Stealth'},
+  {name:'BlazePath',guides:78,views:'200K',score:5250,spec:'Action'},
+  {name:'FrostByte',guides:45,views:'190K',score:5100,spec:'Survival'},
+  {name:'ZenArcher',guides:29,views:'182K',score:4980,spec:'RPG'},
+  {name:'NightOwl_G',guides:61,views:'174K',score:4860,spec:'Horror'},
+];
+
+let showing = 10;
+
+function buildLeaderboard() {
+  const list = document.getElementById('lbList');
+  list.innerHTML = '';
+  authors.slice(0, showing).forEach((a, i) => {
+    const rank = i + 1;
+    const cls = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
+    const rankCls = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
+    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+    list.innerHTML += `
+      <div class="lb-card ${cls}">
+        <div class="lb-rank ${rankCls}">${medal}</div>
+        <div class="lb-avatar">${a.name[0]}</div>
+        <div class="lb-info">
+          <div class="lb-name">${a.name}</div>
+          <div class="lb-stats">
+            <span>📖 ${a.guides} guides</span>
+            <span>👁 ${a.views}</span>
+            <span>🎮 ${a.spec}</span>
+          </div>
+        </div>
+        <div class="lb-score">${a.score.toLocaleString()} pts</div>
+      </div>`;
+  });
+  document.getElementById('showing').textContent = showing;
+  document.getElementById('loadMoreWrap').style.display = showing >= authors.length ? 'none' : 'block';
+}
+
+function loadMore() {
+  showing = Math.min(showing + 10, authors.length);
+  buildLeaderboard();
+}
+</script>
+</body>
+</html>
