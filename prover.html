@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verify Identity · SpawnHub</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&display=swap');
+:root{
+  --bg:#0a0b0f;--surface:#12141c;--card:#181b26;--border:#252836;
+  --neon-a:#7c3aed;--neon-b:#06b6d4;--text:#e2e8f0;--muted:#64748b;
+  --grad:linear-gradient(135deg,#7c3aed 0%,#06b6d4 100%);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+  background-image:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(124,58,237,.15) 0%,transparent 70%);
+}
+.card{
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:48px 36px;max-width:480px;width:100%;text-align:center;
+  position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(124,58,237,.1) 0%,transparent 70%);
+}
+.brand{
+  font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;
+  background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:28px;position:relative;
+}
+.icon-wrap{
+  width:80px;height:80px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;margin:0 auto 24px;font-size:32px;position:relative;
+}
+.icon-wrap.shield{background:rgba(124,58,237,.12);border:2px solid rgba(124,58,237,.35);color:#a78bfa;animation:popIn .5s ease;}
+.icon-wrap.success{background:rgba(52,211,153,.1);border:2px solid rgba(52,211,153,.3);color:#34d399;animation:popIn .4s ease;}
+.icon-wrap.error{background:rgba(248,113,113,.1);border:2px solid rgba(248,113,113,.3);color:#f87171;animation:popIn .4s ease;}
+.icon-wrap.loading{background:rgba(124,58,237,.1);border:2px solid rgba(124,58,237,.3);color:#a78bfa;}
+@keyframes popIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+h1{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;margin-bottom:8px;position:relative;}
+p{color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:24px;position:relative;}
+p strong{color:var(--text);}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:13px 28px;border-radius:10px;font-size:14px;font-weight:600;
+  cursor:pointer;border:none;background:var(--grad);color:#fff;text-decoration:none;
+  font-family:'Inter',sans-serif;transition:all .2s;position:relative;width:100%;
+  box-shadow:0 4px 16px rgba(124,58,237,.3);
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(124,58,237,.4);}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-ghost{
+  background:transparent;color:var(--muted);border:1px solid var(--border);
+  box-shadow:none;margin-top:10px;
+}
+.btn-ghost:hover{color:var(--text);border-color:var(--neon-a);box-shadow:none;transform:none;}
+.hint{font-size:12px;color:var(--muted);margin-top:20px;padding-top:20px;border-top:1px solid var(--border);position:relative;line-height:1.6;}
+.spinner{display:inline-block;width:22px;height:22px;border:3px solid rgba(167,139,250,.2);border-top-color:#a78bfa;border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.countdown-ring{position:relative;width:48px;height:48px;margin:0 auto 16px;}
+.countdown-ring svg{transform:rotate(-90deg);}
+.countdown-ring circle{transition:stroke-dashoffset .9s linear;}
+#countNum{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--neon-b);font-family:'Rajdhani',sans-serif;}
+.pulse{animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.dots::after{content:'';animation:dots 1.5s steps(4,end) infinite;}
+@keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}100%{content:''}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">SpawnHub</div>
+
+  <!-- Loading -->
+  <div id="state-loading">
+    <div class="icon-wrap loading"><div class="spinner"></div></div>
+    <h1>Verifying<span class="dots"></span></h1>
+    <p>Confirming your identity, just a moment</p>
+  </div>
+
+  <!-- Pending: desktop waiting for phone to click -->
+  <div id="state-pending" style="display:none">
+    <div class="icon-wrap shield pulse">
+      <i class="fa-solid fa-shield-halved"></i>
+    </div>
+    <h1>Check Your Email</h1>
+    <p>We sent a verification link to<br><strong id="pendingEmail"></strong><br><br>
+    Click the link on <strong>any device</strong> — even your phone. You'll be signed in here automatically.</p>
+    <button class="btn btn-ghost" id="resendBtn" onclick="resendLink()" disabled>
+      <i class="fa-solid fa-clock"></i> Resend in <span id="resendTimer">60</span>s
+    </button>
+    <div class="hint">
+      Waiting for confirmation<span class="dots"></span><br>
+      Wrong account? <a href="https://unique-leo.github.io/Spawn-hub/" style="color:var(--neon-a);text-decoration:none">Go back</a>
+    </div>
+  </div>
+
+  <!-- Phone confirmed — this device is being signed in -->
+  <div id="state-confirming" style="display:none">
+    <div class="icon-wrap loading"><div class="spinner"></div></div>
+    <h1>Signing you in<span class="dots"></span></h1>
+    <p>Your identity was confirmed. Setting up your session.</p>
+  </div>
+
+  <!-- Success -->
+  <div id="state-success" style="display:none">
+    <div class="icon-wrap success"><i class="fa-solid fa-shield-check"></i></div>
+    <h1>Identity Verified ✓</h1>
+    <p>You're all set. Redirecting you to SpawnHub...</p>
+    <div class="countdown-ring">
+      <svg width="48" height="48" viewBox="0 0 48 48">
+        <circle cx="24" cy="24" r="20" fill="none" stroke="var(--border)" stroke-width="3"/>
+        <circle id="progressCircle" cx="24" cy="24" r="20" fill="none"
+          stroke="var(--neon-b)" stroke-width="3"
+          stroke-dasharray="125.6" stroke-dashoffset="0"/>
+      </svg>
+      <div id="countNum">5</div>
+    </div>
+    <a href="https://unique-leo.github.io/Spawn-hub/" class="btn">
+      <i class="fa-solid fa-rocket"></i> Enter SpawnHub
+    </a>
+  </div>
+
+  <!-- Error -->
+  <div id="state-error" style="display:none">
+    <div class="icon-wrap error"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <h1>Link Invalid or Expired</h1>
+    <p id="errorMsg">This verification link has expired or already been used. Please sign in again.</p>
+    <a href="https://unique-leo.github.io/Spawn-hub/" class="btn">
+      <i class="fa-solid fa-arrow-left"></i> Back to SpawnHub
+    </a>
+  </div>
+</div>
+
+<script>
+const { createClient } = supabase;
+const sb = createClient(
+  'https://ispckqsjarhuxbgezojg.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzcGNrcXNqYXJodXhiZ2V6b2pnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTY3NDYsImV4cCI6MjA5NzA5Mjc0Nn0.JCD0EjMhj4DC-6x5V5W3QO_Ir1ytqK-pjkst633QmEg'
+);
+const SITE_URL = 'https://unique-leo.github.io/Spawn-hub/';
+
+let pendingEmail = '';
+let sessionCode = '';
+let resendCooldown = false;
+let pollInterval = null;
+
+function showState(name) {
+  ['loading','pending','confirming','success','error'].forEach(s => {
+    document.getElementById('state-' + s).style.display = 'none';
+  });
+  document.getElementById('state-' + name).style.display = 'block';
+}
+
+// ── DESKTOP: poll every 2s waiting for phone to confirm ──
+function startPolling(code) {
+  if (pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(async () => {
+    try {
+      const { data } = await sb.from('pending_logins')
+        .select('status, access_token, refresh_token')
+        .eq('session_code', code)
+        .single();
+
+      if (!data) { stopPolling(); showState('error'); return; }
+
+      if (data.status === 'confirmed' && data.access_token) {
+        stopPolling();
+        showState('confirming');
+        // Set session using stored tokens
+        const { error } = await sb.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token
+        });
+        if (error) { showState('error'); document.getElementById('errorMsg').textContent = error.message; return; }
+        // Clean up
+        await sb.from('pending_logins').delete().eq('session_code', code);
+        showState('success');
+        startCountdown();
+      }
+
+      if (data.status === 'expired') {
+        stopPolling();
+        showState('error');
+        document.getElementById('errorMsg').textContent = 'Verification expired. Please sign in again.';
+      }
+    } catch(e) {}
+  }, 2000);
+
+  // Stop polling after 10 minutes
+  setTimeout(() => {
+    stopPolling();
+    const cur = document.getElementById('state-pending');
+    if (cur && cur.style.display !== 'none') {
+      showState('error');
+      document.getElementById('errorMsg').textContent = 'Verification timed out. Please sign in again.';
+    }
+  }, 10 * 60 * 1000);
+}
+
+function stopPolling() {
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+}
+
+// ── PHONE: arrived here via magic link click ──
+async function handleMagicLink() {
+  showState('loading');
+
+  // Wait for Supabase to exchange the token from URL hash
+  const { data: { session } } = await sb.auth.getSession();
+
+  if (session) {
+    await finishPhoneConfirmation(session);
+    return;
+  }
+
+  // Listen for auth state change (Supabase processes the hash async)
+  const { data: { subscription } } = sb.auth.onAuthStateChange(async (event, newSession) => {
+    if (event === 'SIGNED_IN' && newSession) {
+      subscription.unsubscribe();
+      await finishPhoneConfirmation(newSession);
+    }
+  });
+
+  // Fallback after 6s
+  setTimeout(async () => {
+    const { data } = await sb.auth.getSession();
+    if (!data.session) {
+      showState('error');
+    }
+  }, 6000);
+}
+
+async function finishPhoneConfirmation(session) {
+  try {
+    // Find the pending_login record by email and update with tokens
+    const { data: record } = await sb.from('pending_logins')
+      .select('id, session_code')
+      .eq('email', session.user.email)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (record) {
+      // Store tokens so desktop can pick them up
+      await sb.from('pending_logins').update({
+        status: 'confirmed',
+        access_token: session.access_token,
+        refresh_token: session.refresh_token
+      }).eq('id', record.id);
+
+      // Sign out on this device (phone) — session will be used by desktop
+      await sb.auth.signOut();
+
+      // Show success on phone
+      showState('success');
+      // Phone doesn't redirect — desktop will handle it
+      document.querySelector('#state-success p').textContent =
+        'Confirmed! You can close this tab — your other device is being signed in.';
+      document.querySelector('#state-success .countdown-ring').style.display = 'none';
+      document.querySelector('#state-success .btn').style.display = 'none';
+    } else {
+      // No pending record found — maybe same device, just sign in normally
+      await ensureProfile(session.user);
+      showState('success');
+      startCountdown();
+    }
+  } catch(e) {
+    // Fallback: just sign in on this device
+    await ensureProfile(session.user);
+    showState('success');
+    startCountdown();
+  }
+}
+
+async function ensureProfile(user) {
+  try {
+    const { data: existing } = await sb.from('profiles').select('id').eq('id', user.id).single();
+    if (!existing) {
+      const defaultName = (user.email || '').split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').slice(0, 20) || 'Player';
+      await sb.from('profiles').insert({ id: user.id, username: defaultName, avatar_url: null });
+    }
+  } catch(e) {}
+}
+
+function startResendTimer() {
+  const btn = document.getElementById('resendBtn');
+  const timerEl = document.getElementById('resendTimer');
+  btn.disabled = true;
+  resendCooldown = true;
+  let secs = 60;
+  if (timerEl) timerEl.textContent = secs;
+  btn.innerHTML = `<i class="fa-solid fa-clock"></i> Resend in <span id="resendTimer">${secs}</span>s`;
+  const timer = setInterval(() => {
+    secs--;
+    const el = document.getElementById('resendTimer');
+    if (el) el.textContent = secs;
+    if (secs <= 0) {
+      clearInterval(timer);
+      btn.disabled = false;
+      resendCooldown = false;
+      btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Resend email';
+    }
+  }, 1000);
+}
+
+async function resendLink() {
+  if (resendCooldown || !pendingEmail) return;
+  const btn = document.getElementById('resendBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+
+  const { error } = await sb.auth.signInWithOtp({
+    email: pendingEmail,
+    options: { shouldCreateUser: false, emailRedirectTo: 'https://unique-leo.github.io/Spawn-hub/prover.html' }
+  });
+
+  if (error) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Resend email';
+    return;
+  }
+
+  startResendTimer();
+}
+
+function startCountdown() {
+  let secs = 5;
+  const numEl = document.getElementById('countNum');
+  const circle = document.getElementById('progressCircle');
+  const circumference = 125.6;
+  const interval = setInterval(() => {
+    secs--;
+    if (numEl) numEl.textContent = secs;
+    if (circle) circle.style.strokeDashoffset = circumference * (1 - secs / 5);
+    if (secs <= 0) { clearInterval(interval); window.location.href = SITE_URL; }
+  }, 1000);
+}
+
+// ── INIT: decide if we're desktop (waiting) or phone (magic link) ──
+async function init() {
+  const hash = window.location.hash;
+  const params = new URLSearchParams(window.location.search);
+  const hasToken = hash.includes('access_token') || hash.includes('token_hash') || params.get('code');
+
+  if (hasToken) {
+    // This is the phone/device that clicked the magic link
+    await handleMagicLink();
+    return;
+  }
+
+  const emailParam = params.get('email');
+  const codeParam = params.get('code_waiting'); // session_code passed from index.html
+
+  if (emailParam && codeParam) {
+    pendingEmail = decodeURIComponent(emailParam);
+    sessionCode = codeParam;
+    document.getElementById('pendingEmail').textContent = pendingEmail;
+    showState('pending');
+    startResendTimer();
+    startPolling(sessionCode);
+    return;
+  }
+
+  window.location.href = SITE_URL;
+}
+
+init();
+</script>
+</body>
+</html>
